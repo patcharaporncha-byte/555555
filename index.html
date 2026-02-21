@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8">
+    <title>Untitled</title>
+    
+
+  </head>
+    
+  <body>
+  <!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Probability Survival: Space Mission</title>
+    <style>
+        /* ตั้งค่าธีมอวกาศ */
+        body {
+            margin: 0;
+            padding: 0;
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(9, 10, 15, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            text-align: center;
+        }
+        #start-screen h1 {
+            color: #00d2ff;
+            text-shadow: 0 0 10px #3a7bd5;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            max-width: 80%;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+        .start-btn {
+            padding: 15px 40px;
+            font-size: 20px;
+            background: linear-gradient(to right, #3a7bd5, #00d2ff);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 210, 255, 0.5);
+            transition: transform 0.2s;
+        }
+        .start-btn:active { transform: scale(0.95); }
+
+        #ui-bar {
+            width: 100%;
+            max-width: 400px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding: 0 10px;
+            font-size: 16px;
+            font-weight: bold;
+            box-sizing: border-box;
+        }
+        .level { color: #00d2ff; }
+        .hp { color: #ff4757; }
+        .time { color: #eccc68; }
+
+        #game-container {
+            position: relative;
+            margin-top: 10px;
+        }
+        canvas {
+            background-color: transparent;
+            border: 2px solid #00d2ff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.2);
+        }
+
+        #mobile-controls {
+            display: grid;
+            grid-template-columns: 60px 60px 60px;
+            grid-template-rows: 60px 60px;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+        .m-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #00d2ff;
+            color: white;
+            font-size: 24px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+        }
+        .m-btn:active { background: rgba(0, 210, 255, 0.5); }
+        #btn-up { grid-column: 2; grid-row: 1; }
+        #btn-left { grid-column: 1; grid-row: 2; }
+        #btn-down { grid-column: 2; grid-row: 2; }
+        #btn-right { grid-column: 3; grid-row: 2; }
+
+        #question-modal {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(15, 20, 30, 0.95);
+            border: 2px solid #2ed573;
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 320px;
+            text-align: center;
+            box-shadow: 0 0 30px rgba(46, 213, 115, 0.5);
+            z-index: 10;
+        }
+        #ans-input {
+            width: 80%;
+            padding: 10px;
+            font-size: 18px;
+            text-align: center;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            margin-bottom: 15px;
+        }
+        .submit-btn {
+            padding: 10px 20px;
+            background: #2ed573;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        #game-over {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            border: 2px solid white;
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 20;
+            width: 250px;
+        }
+
+        @media (max-width: 450px) {
+            canvas { width: 320px; height: 400px; }
+            #ui-bar { width: 320px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <h1>🚀 Probability<br>Space Mission</h1>
+        <div class="instructions">
+            <strong>วิธีเล่น:</strong><br>
+            1. ขับยาน 🚀 หลบอุกกาบาต ☄️<br>
+            2. เกมมีทั้งหมด <strong>5 ด่าน</strong> (ด่านละ 30 วินาที)<br>
+            3. ระหว่างทางจะมีการหยุดเพื่อ <strong>ถามคำถามความน่าจะเป็น</strong><br>
+            4. ⚠️ <strong>การตอบ:</strong> ให้พิมพ์ตอบเป็นเศษส่วน (เช่น 1/2, 3/4)<br>
+            5. ตอบถูกได้ HP+1 / ตอบผิดโดนหักเวลา 5 วินาที!
+        </div>
+        <button class="start-btn" onclick="startGame()">เริ่มภารกิจ</button>
+    </div>
+
+    <div id="ui-bar">
+        <div class="level">🚩 ด่าน: <span id="level-val">1</span>/5</div>
+        <div class="hp">💖 HP: <span id="hp-val">3</span></div>
+        <div class="time">⏳ เวลา: <span id="time-val">30</span>s</div>
+    </div>
+
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
+        
+        <div id="question-modal">
+            <h2 style="margin-top:0; color:#2ed573;">✨ สัญญาณทางคณิตศาสตร์!</h2>
+            <div id="question-text" style="margin-bottom:15px; font-size: 18px;"></div>
+            <p style="font-size: 12px; color: #ccc;">(พิมพ์ตอบเป็นเศษส่วน เช่น 1/2)</p>
+            <input type="text" id="ans-input" placeholder="พิมพ์คำตอบที่นี่..." autocomplete="off">
+            <br>
+            <button class="submit-btn" onclick="checkAnswer()">ยืนยันคำตอบ</button>
+        </div>
+
+        <div id="game-over">
+            <h2 id="go-title">Game Over</h2>
+            <p id="go-desc">ยานถูกทำลาย!</p>
+            <button class="start-btn" style="padding: 10px 20px; font-size:16px;" onclick="resetToHome()">กลับหน้าหลัก</button>
+        </div>
+    </div>
+
+    <div id="mobile-controls">
+        <div class="m-btn" id="btn-up">⬆️</div>
+        <div class="m-btn" id="btn-left">⬅️</div>
+        <div class="m-btn" id="btn-down">⬇️</div>
+        <div class="m-btn" id="btn-right">➡️</div>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    // UI Elements
+    const startScreen = document.getElementById('start-screen');
+    const levelDisplay = document.getElementById('level-val');
+    const hpDisplay = document.getElementById('hp-val');
+    const timeDisplay = document.getElementById('time-val');
+    const questionModal = document.getElementById('question-modal');
+    const ansInput = document.getElementById('ans-input');
+    const gameOverScreen = document.getElementById('game-over');
+
+    // ตัวแปรเกม
+    let level = 1;
+    const maxLevel = 5;
+    let hp = 3;
+    let timeLeft = 30; 
+    let gameActive = false;
+    let isPaused = false;
+    let frameCount = 0;
+    let obstacles = [];
+    let stars = []; 
+    let keys = {};
+    let gameInterval;
+    let currentQuestionAns = ""; 
+    
+    // --- ระบบเอฟเฟกต์ ---
+    let particles = [];
+    let floatingTexts = [];
+    let warpSpeed = 1;
+
+    // --- ระบบเสียง (Web Audio API) ---
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    let audioCtx;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new AudioContext();
+        }
+        if (audioCtx.state === 'suspended') {
+            audioCtx.resume();
+        }
+    }
+
+    function playTone(freq, type, duration, vol=0.1) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playSound(effect) {
+        if (!audioCtx) return;
+        switch(effect) {
+            case 'hit': // ชนอุกกาบาต
+                playTone(150, 'square', 0.2, 0.2);
+                setTimeout(() => playTone(100, 'sawtooth', 0.3, 0.2), 50);
+                break;
+            case 'correct': // ตอบถูก (เสียงปิ๊งป่อง)
+                playTone(600, 'sine', 0.1, 0.1);
+                setTimeout(() => playTone(800, 'sine', 0.3, 0.1), 100);
+                break;
+            case 'wrong': // ตอบผิด (เสียงต่ำๆ)
+                playTone(300, 'sawtooth', 0.2, 0.1);
+                setTimeout(() => playTone(200, 'sawtooth', 0.4, 0.1), 150);
+                break;
+            case 'levelUp': // ผ่านด่าน
+                playTone(400, 'square', 0.1, 0.1);
+                setTimeout(() => playTone(500, 'square', 0.1, 0.1), 100);
+                setTimeout(() => playTone(600, 'square', 0.3, 0.1), 200);
+                break;
+            case 'alert': // สัญญาณคำถามมา
+                playTone(700, 'sine', 0.2, 0.1);
+                setTimeout(() => playTone(700, 'sine', 0.2, 0.1), 250);
+                break;
+        }
+    }
+    // ----------------------------
+
+    const questionsBank = [
+        { q: "ทอยลูกเต๋า 1 ลูก 1 ครั้ง โอกาสได้เลขคู่คือเท่าใด?", ans: "1/2" },
+        { q: "โยนเหรียญ 2 เหรียญ โอกาสที่จะออกหัวทั้งคู่คือ?", ans: "1/4" },
+        { q: "สุ่มหยิบไพ่ 1 ใบจากสำรับ (52 ใบ) โอกาสได้ไพ่โพแดงคือ?", ans: "1/4" },
+        { q: "กล่องมีบอลแดง 3 ลูก น้ำเงิน 2 ลูก สุ่มหยิบ 1 ลูก โอกาสได้สีแดงคือ?", ans: "3/5" },
+        { q: "ทอยลูกเต๋า 2 ลูกพร้อมกัน โอกาสที่ผลรวมแต้มเท่ากับ 7 คือ?", ans: "1/6" },
+        { q: "ทอยลูกเต๋า 1 ลูก โอกาสได้แต้มมากกว่า 4 คือ?", ans: "1/3" },
+        { q: "มีฉลากเลข 1-10 สุ่มหยิบ 1 ใบ โอกาสได้เลขจำนวนเฉพาะคือ?", ans: "2/5" } 
+    ];
+
+    const player = { x: 180, y: 400, size: 30, speed: 5 };
+
+    window.addEventListener('keydown', e => keys[e.key] = true);
+    window.addEventListener('keyup', e => keys[e.key] = false);
+
+    const btnUp = document.getElementById('btn-up');
+    const btnDown = document.getElementById('btn-down');
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+
+    const addTouch = (elem, key) => {
+        elem.addEventListener('touchstart', (e) => { e.preventDefault(); keys[key] = true; });
+        elem.addEventListener('mousedown', (e) => { e.preventDefault(); keys[key] = true; });
+        elem.addEventListener('touchend', (e) => { e.preventDefault(); keys[key] = false; });
+        elem.addEventListener('mouseup', (e) => { e.preventDefault(); keys[key] = false; });
+        elem.addEventListener('mouseleave', (e) => { e.preventDefault(); keys[key] = false; });
+    };
+
+    addTouch(btnUp, 'ArrowUp');
+    addTouch(btnDown, 'ArrowDown');
+    addTouch(btnLeft, 'ArrowLeft');
+    addTouch(btnRight, 'ArrowRight');
+
+    for(let i=0; i<50; i++) {
+        stars.push({
+            x: Math.random() * canvas.width,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 2,
+            speed: Math.random() * 1 + 0.5
+        });
+    }
+
+    // --- ฟังก์ชันสร้างเอฟเฟกต์ ---
+    function createExplosion(x, y) {
+        for(let i=0; i<20; i++) {
+            particles.push({
+                x: x, y: y,
+                vx: (Math.random() - 0.5) * 8, 
+                vy: (Math.random() - 0.5) * 8, 
+                life: 1.0, 
+                color: Math.random() > 0.5 ? '#ff4757' : '#ffa502', 
+                size: Math.random() * 4 + 2
+            });
+        }
+    }
+
+    function createThruster() {
+        particles.push({
+            x: player.x + 15 + (Math.random() - 0.5) * 10, 
+            y: player.y + 30,
+            vx: (Math.random() - 0.5) * 2,
+            vy: Math.random() * 3 + 2,
+            life: 1.0,
+            color: '#00d2ff', 
+            size: Math.random() * 3 + 1
+        });
+    }
+
+    function addFloatingText(text, x, y, color) {
+        floatingTexts.push({
+            text: text,
+            x: x,
+            y: y,
+            color: color,
+            life: 1.0,
+            vy: -2 
+        });
+    }
+    // ----------------------------
+
+    function spawnObstacle() {
+        let size = Math.random() * 15 + 20;
+        let x = Math.random() * (canvas.width - size);
+        let speed = (Math.random() * 3 + 2) + (level * 0.5); 
+        obstacles.push({ x: x, y: -size, size: size, speed: speed });
+    }
+
+    function update() {
+        if (!gameActive || isPaused) return;
+
+        if (warpSpeed > 1) warpSpeed -= 0.05;
+
+        if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+        if (keys['ArrowRight'] && player.x < canvas.width - player.size) player.x += player.speed;
+        if (keys['ArrowUp'] && player.y > 0) player.y -= player.speed;
+        if (keys['ArrowDown'] && player.y < canvas.height - player.size) player.y += player.speed;
+
+        let spawnRate = Math.max(10, 30 - (level * 3));
+        if (frameCount % spawnRate === 0) spawnObstacle();
+
+        createThruster();
+
+        stars.forEach(star => {
+            star.y += star.speed * warpSpeed; 
+            if (star.y > canvas.height) { star.y = 0; star.x = Math.random() * canvas.width; }
+        });
+
+        for (let i = 0; i < obstacles.length; i++) {
+            let obs = obstacles[i];
+            obs.y += obs.speed;
+
+            let hitboxOffset = 5; 
+            if (player.x < obs.x + obs.size - hitboxOffset &&
+                player.x + player.size > obs.x + hitboxOffset &&
+                player.y < obs.y + obs.size - hitboxOffset &&
+                player.y + player.size > obs.y + hitboxOffset) {
+                
+                hp--;
+                hpDisplay.innerText = hp;
+                
+                playSound('hit'); // เพิ่มเสียงระเบิด
+                createExplosion(obs.x + obs.size/2, obs.y + obs.size/2);
+
+                obstacles.splice(i, 1);
+                i--;
+
+                canvas.style.borderColor = '#ff4757';
+                setTimeout(() => canvas.style.borderColor = '#00d2ff', 200);
+
+                if (hp <= 0) endGame(false);
+            }
+
+            if (obs.y > canvas.height) { obstacles.splice(i, 1); i--; }
+        }
+
+        for(let i=0; i<particles.length; i++) {
+            let p = particles[i];
+            p.x += p.vx;
+            p.y += p.vy;
+            p.life -= 0.05; 
+            if(p.life <= 0) { particles.splice(i, 1); i--; }
+        }
+
+        for(let i=0; i<floatingTexts.length; i++) {
+            let ft = floatingTexts[i];
+            ft.y += ft.vy;
+            ft.life -= 0.02; 
+            if(ft.life <= 0) { floatingTexts.splice(i, 1); i--; }
+        }
+
+        frameCount++;
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.fillStyle = 'white';
+        stars.forEach(star => {
+            ctx.beginPath();
+            ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+            ctx.fill();
+            if(warpSpeed > 1) {
+                ctx.fillStyle = 'rgba(255,255,255,0.5)';
+                ctx.fillRect(star.x - star.size, star.y - star.size * warpSpeed * 3, star.size*2, star.size * warpSpeed * 3);
+                ctx.fillStyle = 'white';
+            }
+        });
+
+        particles.forEach(p => {
+            ctx.globalAlpha = Math.max(0, p.life); 
+            ctx.fillStyle = p.color;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+            ctx.fill();
+        });
+        ctx.globalAlpha = 1.0; 
+
+        ctx.font = "30px Arial";
+        ctx.fillText("🚀", player.x, player.y + 25);
+
+        obstacles.forEach(obs => {
+            ctx.font = obs.size + "px Arial";
+            ctx.fillText("☄️", obs.x, obs.y + obs.size);
+        });
+
+        floatingTexts.forEach(ft => {
+            ctx.globalAlpha = Math.max(0, ft.life);
+            ctx.fillStyle = ft.color;
+            ctx.font = "bold 20px 'Segoe UI'";
+            ctx.fillText(ft.text, ft.x, ft.y);
+        });
+        ctx.globalAlpha = 1.0;
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        if (gameActive) { requestAnimationFrame(gameLoop); }
+    }
+
+    function runTimer() {
+        gameInterval = setInterval(() => {
+            if (!gameActive || isPaused) return;
+            
+            timeLeft--;
+            timeDisplay.innerText = timeLeft;
+
+            if (timeLeft === 15) { triggerQuestion(); }
+
+            if (timeLeft <= 0) {
+                if (level < maxLevel) {
+                    levelUp();
+                } else {
+                    endGame(true);
+                }
+            }
+        }, 1000);
+    }
+
+    function levelUp() {
+        level++;
+        levelDisplay.innerText = level;
+        timeLeft = 30; 
+        timeDisplay.innerText = timeLeft;
+        obstacles = []; 
+        warpSpeed = 10; 
+        
+        playSound('levelUp'); // เพิ่มเสียงผ่านด่าน
+        addFloatingText(`LEVEL ${level}!`, canvas.width/2 - 40, canvas.height/2, "#00d2ff");
+    }
+
+    function triggerQuestion() {
+        isPaused = true;
+        playSound('alert'); // เพิ่มเสียงเตือนมีคำถาม
+        const qIndex = Math.floor(Math.random() * questionsBank.length);
+        const qData = questionsBank[qIndex];
+        
+        document.getElementById('question-text').innerText = qData.q;
+        currentQuestionAns = qData.ans;
+        ansInput.value = ""; 
+        questionModal.style.display = 'block';
+        ansInput.focus();
+    }
+
+    function checkAnswer() {
+        let userAnswer = ansInput.value.replace(/\s+/g, '');
+        
+        if (userAnswer === "") {
+            alert("กรุณาพิมพ์คำตอบก่อนกดยืนยันครับ");
+            return;
+        }
+
+        questionModal.style.display = 'none';
+        
+        if (userAnswer === currentQuestionAns) {
+            hp++; 
+            hpDisplay.innerText = hp;
+            playSound('correct'); // เสียงตอนตอบถูก
+            addFloatingText("+1 HP", player.x, player.y - 10, "#2ed573"); 
+        } else {
+            timeLeft = Math.max(0, timeLeft - 5); 
+            timeDisplay.innerText = timeLeft;
+            playSound('wrong'); // เสียงตอนตอบผิด
+            addFloatingText("-5s", player.x, player.y - 10, "#ff4757"); 
+            alert(`❌ คำตอบที่ถูกคือ ${currentQuestionAns}`);
+            if(timeLeft <= 0 && level === maxLevel) endGame(false);
+            else if (timeLeft <= 0) levelUp();
+        }
+        
+        isPaused = false;
+        obstacles = []; 
+    }
+
+    ansInput.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            checkAnswer();
+        }
+    });
+
+    function endGame(isWin) {
+        gameActive = false;
+        clearInterval(gameInterval);
+        gameOverScreen.style.display = 'block';
+        
+        const title = document.getElementById('go-title');
+        const desc = document.getElementById('go-desc');
+
+        if (isWin) {
+            playSound('levelUp'); // เสียงชนะ
+            title.innerText = "🏆 ภารกิจสำเร็จ!";
+            title.style.color = "#2ed573";
+            desc.innerText = "คุณคือยอดนักบินแห่งกาแล็กซีความน่าจะเป็น!";
+        } else {
+            playSound('hit'); // เสียงแพ้
+            createExplosion(player.x + 15, player.y + 15); 
+            draw(); 
+            title.innerText = "💥 ภารกิจล้มเหลว";
+            title.style.color = "#ff4757";
+            desc.innerText = "ยานถูกทำลาย... พยายามใหม่อีกครั้งนะ";
+        }
+    }
+
+    function startGame() {
+        initAudio(); // เริ่มทำงานระบบเสียงเมื่อกดปุ่มเริ่มเกม
+        startScreen.style.display = 'none';
+        resetGameVariables();
+        gameActive = true;
+        runTimer();
+        gameLoop();
+    }
+
+    function resetToHome() {
+        gameOverScreen.style.display = 'none';
+        startScreen.style.display = 'flex';
+        ctx.clearRect(0, 0, canvas.width, canvas.height); 
+    }
+
+    function resetGameVariables() {
+        level = 1;
+        hp = 3;
+        timeLeft = 30;
+        isPaused = false;
+        frameCount = 0;
+        obstacles = [];
+        particles = []; 
+        floatingTexts = [];
+        warpSpeed = 1;
+        player.x = 180;
+        player.y = 400;
+
+        levelDisplay.innerText = level;
+        hpDisplay.innerText = hp;
+        timeDisplay.innerText = timeLeft;
+        clearInterval(gameInterval);
+    }
+
+    function drawIdle() {
+        if(!gameActive) {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            stars.forEach(star => {
+                ctx.beginPath();
+                ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawIdle);
+        }
+    }
+    drawIdle(); 
+
+</script>
+
+</body>
+</html>
+    
+  </body>
+  
+</html>
